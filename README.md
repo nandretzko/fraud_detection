@@ -20,7 +20,7 @@ fraud-detection/
 
 ## Données attendues
 
-Placer dans `data/` les fichiers CSV suivants (issus de Kaggle – [Credit Card Fraud Dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection)) :
+Les données sont dans `data/` avec les fichiers CSV suivants (issus de Kaggle – [Credit Card Fraud Dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection)) :
 
 | Fichier | Description |
 |---|---|
