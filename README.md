@@ -1,4 +1,4 @@
-# 🔍 Credit Card Fraud Detection
+# Credit Card Fraud Detection
 
 Credit card fraud detection via an industrialized ML pipeline, based on the a notebook I created.
 ## Project Structure
