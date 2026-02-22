@@ -3,6 +3,7 @@
 Credit card fraud detection using an industrialized machine learning pipeline, based on a Kaggle project I previously completed.
 
 # Project Structure
+
 fraud-detection/
 ├── src/
 │   ├── train.py          # End-to-end training pipeline
@@ -14,6 +15,8 @@ fraud-detection/
 ├── Makefile              # Common commands
 ├── requirements.txt      # Python dependencies
 └── README.md
+
+
 Expected Data
 
 Data should be placed in data/ with the following CSV files (from Kaggle – Credit Card Fraud Dataset
