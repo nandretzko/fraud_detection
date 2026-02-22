@@ -1,7 +1,6 @@
 # 🔍 Credit Card Fraud Detection
 
-Credit card fraud detection via an industrialized ML pipeline, based on the notebook `Credit_risk_modelling_in_python.ipynb`.
-
+Credit card fraud detection via an industrialized ML pipeline, based on the a notebook I created.
 ## Project Structure
 
 ```
