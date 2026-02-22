@@ -1,124 +1,107 @@
-# 🔍 Credit Card Fraud Detection
+# Credit Card Fraud Detection
 
-Détection de fraude par carte de crédit via un pipeline ML industrialisé, basé sur un kaggle que j'avais effectué.
+Credit card fraud detection using an industrialized machine learning pipeline, based on a Kaggle project I previously completed.
 
-## Structure du projet
-
-```
+# Project Structure
 fraud-detection/
 ├── src/
-│   ├── train.py          # Pipeline d'entraînement complet
-│   └── predict.py        # Script d'inférence (scoring de nouvelles transactions)
-├── data/                 # ← Placer fraudTrain.csv et fraudTest.csv ici
-├── models/               # Artefacts générés après entraînement (.pkl)
-├── outputs/              # Prédictions générées
-├── Dockerfile            # Image Docker pour industrialisation
-├── Makefile              # Commandes courantes
-├── requirements.txt      # Dépendances Python
+│   ├── train.py          # End-to-end training pipeline
+│   └── predict.py        # Inference script (scoring new transactions)
+├── data/                 # ← Place fraudTrain.csv and fraudTest.csv here
+├── models/               # Artifacts generated after training (.pkl)
+├── outputs/              # Generated predictions
+├── Dockerfile            # Docker image for containerized deployment
+├── Makefile              # Common commands
+├── requirements.txt      # Python dependencies
 └── README.md
-```
+Expected Data
 
-## Données attendues
+Data should be placed in data/ with the following CSV files (from Kaggle – Credit Card Fraud Dataset
+):
 
-Les données doivent etre mises dans `data/` avec les fichiers CSV suivants (issus de Kaggle – [Credit Card Fraud Dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection)) :
+File	Description
+fraudTrain.csv	Training transactions (~1.3M rows)
+fraudTest.csv	Test transactions (~555K rows)
 
-| Fichier | Description |
-|---|---|
-| `fraudTrain.csv` | Transactions d'entraînement (~1.3M lignes) |
-| `fraudTest.csv` | Transactions de test (~555K lignes) |
+Main columns: trans_date_trans_time, cc_num, merchant, category, amt, gender, lat, long, city_pop, dob, merch_lat, merch_long, is_fraud (target).
 
-Colonnes principales : `trans_date_trans_time`, `cc_num`, `merchant`, `category`, `amt`, `gender`, `lat`, `long`, `city_pop`, `dob`, `merch_lat`, `merch_long`, **`is_fraud`** (target).
+# Engineered Features
 
-## Features construites
+The pipeline reproduces the original notebook logic:
 
-Le pipeline reproduit fidèlement le notebook :
+age: customer age computed from dob and transaction date
 
-- **`age`** : âge du client calculé à partir de `dob` et de la date de transaction
-- **`distance`** : distance euclidienne (degrés) entre le client et le commerçant
-- **`hour`** / **`day_of_week`** : variables temporelles
-- **`gender`** : encodage binaire (F=0, M=1)
-- **`category_*`** : one-hot encoding de la catégorie de transaction
+distance: Euclidean distance (in degrees) between customer and merchant
 
-## Usage rapide – local
+hour / day_of_week: time-based features
 
-### 1. Installer les dépendances
+gender: binary encoding (F=0, M=1)
 
-```bash
+category_*: one-hot encoding of transaction category
+
+# Local Usage
+1. Install Dependencies
 pip install -r requirements.txt
-# ou via Make :
+# or via Make:
 make install
-```
 
-### 2. Entraîner le modèle
-
-```bash
+# 2. Train the Model
 make train
-# ou directement :
+# or directly:
 python src/train.py \
   --train data/fraudTrain.csv \
   --test  data/fraudTest.csv \
   --model-dir models \
   --threshold 0.01
-```
 
-Artefacts générés dans `models/` :
-- `logistic_model.pkl` – modèle Logistic Regression entraîné
-- `scaler.pkl` – StandardScaler ajusté sur le train
-- `feature_cols.pkl` – liste ordonnée des features
+Generated artifacts in models/:
 
-### 3. Scorer de nouvelles transactions
+logistic_model.pkl – trained Logistic Regression model
 
-```bash
+scaler.pkl – StandardScaler fitted on training data
+
+feature_cols.pkl – ordered list of feature columns
+
+3. Score New Transactions
 make predict INPUT=data/fraudTest.csv
-# ou :
+# or:
 python src/predict.py \
   --input data/new_transactions.csv \
   --model-dir models \
   --output outputs/scored.csv \
   --threshold 0.01
-```
-
-## Usage Docker
-
-### Build
-
-```bash
+Docker Usage
+Build
 make docker-build
-```
-
-### Entraînement dans Docker
-
-```bash
+Training in Docker
 make docker-train
-```
 
-(Monte automatiquement `data/`, `models/` et `outputs/` en volumes locaux.)
+(data/, models/, and outputs/ are automatically mounted as local volumes.)
 
-### Inférence dans Docker
-
-```bash
+Inference in Docker
 make docker-predict INPUT=data/fraudTest.csv
-```
+Configurable Parameters
+Parameter	Default	Description
+--train	data/fraudTrain.csv	Path to training CSV
+--test	data/fraudTest.csv	Path to test CSV
+--model-dir	models	Directory to store artifacts
+--threshold	0.01	Classification threshold (fraud-sensitive)
+--C	1.0	Logistic Regression regularization strength
+--max-iter	1000	Maximum number of solver iterations
 
-## Paramètres configurables
+Threshold note: the dataset is highly imbalanced (~0.6% fraud). A low threshold (0.01) increases recall at the expense of precision, which is often preferable in fraud detection settings.
 
-| Paramètre | Défaut | Description |
-|---|---|---|
-| `--train` | `data/fraudTrain.csv` | Chemin du CSV d'entraînement |
-| `--test` | `data/fraudTest.csv` | Chemin du CSV de test |
-| `--model-dir` | `models` | Répertoire de sauvegarde des artefacts |
-| `--threshold` | `0.01` | Seuil de classification (sensible aux fraudes) |
-| `--C` | `1.0` | Régularisation Logistic Regression |
-| `--max-iter` | `1000` | Nombre max d'itérations du solver |
+# Model
 
-> **Note sur le seuil** : le dataset est très déséquilibré (~0.6% de fraudes). Un seuil bas (0.01) maximise le recall aux dépens de la précision, ce qui est souvent préférable en détection de fraude.
+Logistic Regression with class_weight='balanced' to handle class imbalance.
+The model outputs fraud probabilities for each transaction.
 
-## Modèle
+# Reported metrics:
 
-**Logistic Regression** avec `class_weight='balanced'` pour gérer le déséquilibre de classes. Le modèle produit des probabilités de fraude pour chaque transaction.
+ROC-AUC
 
-Métriques reportées :
-- ROC-AUC
-- Average Precision (PR-AUC)
-- Classification report complet (precision, recall, F1)
-- Sweep de seuils : 0.01, 0.05, 0.1, 0.5
+Average Precision (PR-AUC)
+
+Full classification report (precision, recall, F1)
+
+Threshold sweep: 0.01, 0.05, 0.1, 0.5
