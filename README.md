@@ -1,54 +1,57 @@
-# Credit Card Fraud Detection
+# 🔍 Credit Card Fraud Detection
 
-Credit card fraud detection using an industrialized machine learning pipeline, based on a Kaggle project I previously completed.
+Credit card fraud detection via an industrialized ML pipeline, based on the notebook `Credit_risk_modelling_in_python.ipynb`.
 
-# Project Structure
+## Project Structure
 
+```
 fraud-detection/
 ├── src/
-│   ├── train.py          # End-to-end training pipeline
+│   ├── train.py          # Full training pipeline
 │   └── predict.py        # Inference script (scoring new transactions)
 ├── data/                 # ← Place fraudTrain.csv and fraudTest.csv here
 ├── models/               # Artifacts generated after training (.pkl)
 ├── outputs/              # Generated predictions
-├── Dockerfile            # Docker image for containerized deployment
+├── Dockerfile            # Docker image for industrialization
 ├── Makefile              # Common commands
 ├── requirements.txt      # Python dependencies
 └── README.md
+```
 
+## Expected Data
 
-Expected Data
+Place the following CSV files in `data/` (from Kaggle – [Credit Card Fraud Dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection)):
 
-Data should be placed in data/ with the following CSV files (from Kaggle – Credit Card Fraud Dataset
-):
+| File | Description |
+|---|---|
+| `fraudTrain.csv` | Training transactions (~1.3M rows) |
+| `fraudTest.csv` | Test transactions (~555K rows) |
 
-File	Description
-fraudTrain.csv	Training transactions (~1.3M rows)
-fraudTest.csv	Test transactions (~555K rows)
+Main columns: `trans_date_trans_time`, `cc_num`, `merchant`, `category`, `amt`, `gender`, `lat`, `long`, `city_pop`, `dob`, `merch_lat`, `merch_long`, **`is_fraud`** (target).
 
-Main columns: trans_date_trans_time, cc_num, merchant, category, amt, gender, lat, long, city_pop, dob, merch_lat, merch_long, is_fraud (target).
+## Engineered Features
 
-# Engineered Features
+The pipeline faithfully reproduces the notebook:
 
-The pipeline reproduces the original notebook logic:
+- **`age`**: customer age computed from `dob` and the transaction date
+- **`distance`**: Euclidean distance (degrees) between the customer and the merchant
+- **`hour`** / **`day_of_week`**: temporal features
+- **`gender`**: binary encoding (F=0, M=1)
+- **`category_*`**: one-hot encoding of the transaction category
 
-age: customer age computed from dob and transaction date
+## Quick Start – Local
 
-distance: Euclidean distance (in degrees) between customer and merchant
+### 1. Install dependencies
 
-hour / day_of_week: time-based features
-
-gender: binary encoding (F=0, M=1)
-
-category_*: one-hot encoding of transaction category
-
-# Local Usage
-1. Install Dependencies
+```bash
 pip install -r requirements.txt
 # or via Make:
 make install
+```
 
-# 2. Train the Model
+### 2. Train the model
+
+```bash
 make train
 # or directly:
 python src/train.py \
@@ -56,16 +59,16 @@ python src/train.py \
   --test  data/fraudTest.csv \
   --model-dir models \
   --threshold 0.01
+```
 
-Generated artifacts in models/:
+Artifacts generated in `models/`:
+- `logistic_model.pkl` – trained Logistic Regression model
+- `scaler.pkl` – StandardScaler fitted on the training set
+- `feature_cols.pkl` – ordered list of features
 
-logistic_model.pkl – trained Logistic Regression model
+### 3. Score new transactions
 
-scaler.pkl – StandardScaler fitted on training data
-
-feature_cols.pkl – ordered list of feature columns
-
-3. Score New Transactions
+```bash
 make predict INPUT=data/fraudTest.csv
 # or:
 python src/predict.py \
@@ -73,38 +76,49 @@ python src/predict.py \
   --model-dir models \
   --output outputs/scored.csv \
   --threshold 0.01
-Docker Usage
-Build
+```
+
+## Docker Usage
+
+### Build
+
+```bash
 make docker-build
-Training in Docker
+```
+
+### Training in Docker
+
+```bash
 make docker-train
+```
 
-(data/, models/, and outputs/ are automatically mounted as local volumes.)
+(Automatically mounts `data/`, `models/`, and `outputs/` as local volumes.)
 
-Inference in Docker
+### Inference in Docker
+
+```bash
 make docker-predict INPUT=data/fraudTest.csv
-Configurable Parameters
-Parameter	Default	Description
---train	data/fraudTrain.csv	Path to training CSV
---test	data/fraudTest.csv	Path to test CSV
---model-dir	models	Directory to store artifacts
---threshold	0.01	Classification threshold (fraud-sensitive)
---C	1.0	Logistic Regression regularization strength
---max-iter	1000	Maximum number of solver iterations
+```
 
-Threshold note: the dataset is highly imbalanced (~0.6% fraud). A low threshold (0.01) increases recall at the expense of precision, which is often preferable in fraud detection settings.
+## Configurable Parameters
 
-# Model
+| Parameter | Default | Description |
+|---|---|---|
+| `--train` | `data/fraudTrain.csv` | Path to training CSV |
+| `--test` | `data/fraudTest.csv` | Path to test CSV |
+| `--model-dir` | `models` | Directory for saving artifacts |
+| `--threshold` | `0.01` | Classification threshold (sensitive to fraud) |
+| `--C` | `1.0` | Logistic Regression regularization |
+| `--max-iter` | `1000` | Maximum number of solver iterations |
 
-Logistic Regression with class_weight='balanced' to handle class imbalance.
-The model outputs fraud probabilities for each transaction.
+> **Note on the threshold**: the dataset is highly imbalanced (~0.6% fraud). A low threshold (0.01) maximizes recall at the expense of precision, which is often preferable in fraud detection.
 
-# Reported metrics:
+## Model
 
-ROC-AUC
+**Logistic Regression** with `class_weight='balanced'` to handle class imbalance. The model outputs fraud probabilities for each transaction.
 
-Average Precision (PR-AUC)
-
-Full classification report (precision, recall, F1)
-
-Threshold sweep: 0.01, 0.05, 0.1, 0.5
+Reported metrics:
+- ROC-AUC
+- Average Precision (PR-AUC)
+- Full classification report (precision, recall, F1)
+- Threshold sweep: 0.01, 0.05, 0.1, 0.5
